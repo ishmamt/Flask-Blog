@@ -1,8 +1,7 @@
-from flask import Flask, render_template, url_for, flash, redirect
-from forms import RegistrationForm, LoginForm
-app = Flask(__name__)
-
-app.config['SECRET_KEY'] = '6304b01155a34b592f575364199d8581'  # secret key for cookies
+from flask import render_template, url_for, flash, redirect
+from flaskblog.models import User, Post
+from flaskblog import app
+from flaskblog.forms import RegistrationForm, LoginForm
 
 
 # fake database call
@@ -53,7 +52,3 @@ def login():
         else:
             flash("Login unsuccessful. Please try again.", "danger")
     return render_template('login.html', title='login', form=form)
-
-
-if __name__ == '__main__':
-    app.run(debug=True)
