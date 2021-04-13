@@ -1,30 +1,18 @@
-from flask import render_template, url_for, flash, redirect
+import secrets
+import os
+from PIL import Image
+from flask import render_template, url_for, flash, redirect, request
 from flaskblog.models import User, Post
-from flaskblog import app
-from flaskblog.forms import RegistrationForm, LoginForm
-
-
-# fake database call
-posts = [
-    {
-        'name': 'Ishmam Tashdeed',
-        'content_name': 'Blog 1 Test',
-        'date_posted': '07 April, 2021',
-        'content': 'Hello world! My first ever test blog.'
-    },
-    {
-        'name': 'Sarni V.',
-        'content_name': 'The truth',
-        'date_posted': '08 April, 2021',
-        'content': 'I am The Cutest.'
-    }
-]
+from flaskblog import app, db, bcrypt
+from flaskblog.forms import RegistrationForm, LoginForm, UpdateAccountForm, PostForm
+from flask_login import login_user, current_user, logout_user, login_required
 
 
 @app.route('/')
 @app.route('/home')
 @app.route('/index')
 def home():
+    posts = Post.query.all()
     return render_template("home.html", posts=posts)
 
 
@@ -35,20 +23,99 @@ def about():
 
 @app.route('/register', methods=["GET", "POST"])
 def register():
+    if current_user.is_authenticated:
+        # if user is already logged in
+        return redirect(url_for("home"))
+
     form = RegistrationForm()
     if form.validate_on_submit():
+        # hashing the password
+        hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')  # decode needed to get string hash
+        # creating a new user
+        user = User(username=form.username.data, email=form.email.data, password=hashed_password)
+        db.session.add(user)
+        db.session.commit()
+
         flash(f"Account created for {form.username.data}.", "success")
-        return redirect(url_for("home"))
+        return redirect(url_for("login"))
     return render_template('register.html', title='register', form=form)
 
 
 @app.route('/login', methods=["GET", "POST"])
 def login():
+    if current_user.is_authenticated:
+        # if user is already logged in
+        return redirect(url_for("home"))
+
     form = LoginForm()
     if form.validate_on_submit():
-        if form.username.data == "admin" and form.password.data == "1234":
-            flash(f"Welcome Back {form.username.data}!", "success")
-            return redirect(url_for("home"))
+        user = User.query.filter_by(username=form.username.data).first()
+        if user and bcrypt.check_password_hash(user.password, form.password.data):
+            login_user(user, remember=form.remember.data)
+            next_page = request.args.get('next')  # returns none if next argument is not there
+            return redirect(next_page) if next_page else redirect(url_for("home"))
         else:
-            flash("Login unsuccessful. Please try again.", "danger")
+            flash("Login unsuccessful. Please check username or password.", "danger")
     return render_template('login.html', title='login', form=form)
+
+
+@app.route('/logout')
+def logout():
+    logout_user()
+    return redirect(url_for("login"))
+
+
+def save_picture(form_picture):
+    random_hex = secrets.token_hex(8)  # random name of the picture
+    _, f_ext = os.path.splitext(form_picture.filename)
+    picture_fn = random_hex + f_ext
+    picture_path = os.path.join(app.root_path, 'static/profile_pic', picture_fn)
+
+    # resizing the image
+    output_size = (125, 125)
+    i = Image.open(form_picture)
+    i.thumbnail(output_size)
+
+    # saving the image
+    i.save(picture_path)
+
+    # deleting the old profile pic
+    old_pic = current_user.image_file
+    old_pic_path = os.path.join(app.root_path, 'static/profile_pic', old_pic)
+    if old_pic != 'default.jpg' and os.path.exists(old_pic_path):
+        os.remove(old_pic_path)
+
+    return picture_fn
+
+
+@app.route('/account', methods=["GET", "POST"])
+@login_required
+def account():
+    form = UpdateAccountForm()
+    if form.validate_on_submit():
+        if form.picture.data:
+            picture_file = save_picture(form.picture.data)
+            current_user.image_file = picture_file
+        current_user.username = form.username.data
+        current_user.email = form.email.data
+        db.session.commit()
+        flash(f"Account has been updated.", "success")
+        return redirect(url_for("account"))
+    elif request.method == "GET":
+        form.username.data = current_user.username
+        form.email.data = current_user.email
+    image_file = url_for('static', filename=f'profile_pic/{current_user.image_file}')
+    return render_template("account.html", title='account', image_file=image_file, form=form)
+
+
+@app.route('/post/new', methods=["GET", "POST"])
+@login_required
+def new_post():
+    form = PostForm()
+    if form.validate_on_submit():
+        post = Post(title=form.title.data, content=form.content.data, author=current_user)
+        db.session.add(post)
+        db.session.commit()
+        flash(f"New post created.", "success")
+        return redirect(url_for("home"))
+    return render_template("create_post.html", title='new post', form=form)
