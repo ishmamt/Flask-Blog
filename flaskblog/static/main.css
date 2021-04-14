@@ -42,6 +42,11 @@ h1, h2, h3, h4, h5, h6 {
   text-decoration: none;
 }
 
+.article-title-show {
+  color: #444444;
+  text-decoration: none;
+}
+
 .article-content {
   white-space: pre-line;
 }
