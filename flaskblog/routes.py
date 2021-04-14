@@ -12,7 +12,9 @@ from flask_login import login_user, current_user, logout_user, login_required
 @app.route('/index')
 @app.route('/')
 def home():
-    posts = Post.query.all()
+    page = request.args.get('page', 1, type=int)  # getting the page. Default page is 1
+    # posts = Post.query.all()  # kept it here to show how I did it earlier
+    posts = Post.query.order_by(Post.date_posted.desc()).paginate(page=page, per_page=4)  # to prevent grabbing and loading all the posts at once
     return render_template("home.html", posts=posts)
 
 
@@ -88,7 +90,7 @@ def save_picture(form_picture):
     return picture_fn
 
 
-@app.route('/<string:username>', methods=["GET", "POST"])
+@app.route('/<string:username>/edit', methods=["GET", "POST"])
 @login_required
 def account(username):
     form = UpdateAccountForm()
@@ -105,7 +107,7 @@ def account(username):
         form.username.data = current_user.username
         form.email.data = current_user.email
     image_file = url_for('static', filename=f'profile_pic/{current_user.image_file}')
-    return render_template("account.html", title=current_user.username, image_file=image_file, form=form)
+    return render_template("account.html", title="edit profile", image_file=image_file, form=form)
 
 
 @app.route('/post/new', methods=["GET", "POST"])
@@ -156,3 +158,12 @@ def delete_post(post_id):
     db.session.commit()
     flash("The post has been deleted.", "success")
     return redirect(url_for("home"))
+
+
+@app.route('/<string:username>', methods=["GET", "POST"])
+@login_required
+def user_posts(username):
+    page = request.args.get('page', 1, type=int)
+    user = User.query.filter_by(username=username).first_or_404()
+    posts = Post.query.filter_by(author=user).order_by(Post.date_posted.desc()).paginate(page=page, per_page=4)
+    return render_template("user_posts.html", posts=posts, user=user, title=user.username)
