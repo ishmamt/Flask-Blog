@@ -22,9 +22,9 @@
         {% for page_num in posts.iter_pages(left_edge=1, right_edge=1, right_current=2, left_current=1) %}
             {% if page_num %}
                 {% if posts.page == page_num %}
-                    <a class="btn btn-info mb-4" href="{{ url_for('user_posts', page=page_num, username=current_user.username) }}">{{ page_num }}</a>
+                    <a class="btn btn-info mb-4" href="{{ url_for('user_posts', page=page_num, username=user.username) }}">{{ page_num }}</a>
                 {% else %}
-                    <a class="btn btn-outline-info mb-4" href="{{ url_for('user_posts', page=page_num, username=current_user.username) }}">{{ page_num }}</a>
+                    <a class="btn btn-outline-info mb-4" href="{{ url_for('user_posts', page=page_num, username=user.username) }}">{{ page_num }}</a>
                 {% endif %}
             {% else %}
                 ...
