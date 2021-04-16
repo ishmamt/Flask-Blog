@@ -41,14 +41,14 @@
                 </div>
                 <div class="pt-3">
                     <small class="text-muted">
-                        <a href="{{ url_for('reset_request') }}">Forgot password?</a>
+                        <a href="{{ url_for('users.reset_request') }}">Forgot password?</a>
                     </small>
                 </div>
             </form>
         </div>
         <div class="border-top pt-1">
             <small class="text-muted">
-                Need an account? <a class="ml-2" href="{{ url_for('register') }}">Register</a>
+                Need an account? <a class="ml-2" href="{{ url_for('users.register') }}">Register</a>
             </small>
         </div>
     {% endblock content %}

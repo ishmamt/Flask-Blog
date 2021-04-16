@@ -24,7 +24,15 @@ bcrypt = Bcrypt(app)
 mail = Mail(app)
 
 login_manager = LoginManager(app)
-login_manager.login_view = "login"  # the name of the function to handle log in page.
+login_manager.login_view = "users.login"  # the name of the function to handle log in page.
 login_manager.login_message_category = "info"  # bootsrap class
 
-from flaskblog import routes  # to prevent circular import
+
+# to prevent circular import
+from flaskblog.users.routes import users
+from flaskblog.posts.routes import posts
+from flaskblog.main.routes import main
+
+app.register_blueprint(users)
+app.register_blueprint(posts)
+app.register_blueprint(main)
