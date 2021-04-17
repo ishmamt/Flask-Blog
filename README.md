@@ -4,7 +4,7 @@ Made to learn Flask framework. Followed the incredible <a href="https://youtube.
 ## Getting Started
 
 ### Prerequisites
-All the dependancies are listed in requirements.
+All the dependancies are listed in <a href="https://github.com/ishmamt/Flask-Blog/blob/master/requirements.txt">requirements</a>.
 
 ### Installation
 To install, first create a virtual environment and activate it.
@@ -16,7 +16,7 @@ If you have anaconda installed, create an environment using that.
 ```
 conda create --name env_name python=[python version]  // 3.6 and over
 ```
-**"env_name"** should contain the name of the environment. Then install all the packadges from the requirements.
+**"env_name"** should contain the name of the environment. Then install all the packadges from the <a href="https://github.com/ishmamt/Flask-Blog/blob/master/requirements.txt">requirements</a>.
 ```
 pip install -r requirements.txt
 ```
